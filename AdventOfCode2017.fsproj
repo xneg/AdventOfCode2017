@@ -2,12 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Helper.fs" />
     <Compile Include="Day01.fs" />
     <Compile Include="Day02.fs" />  
-    <Compile Include="Day03.fs" />          
+    <Compile Include="Day03.fs" /> 
+    <Compile Include="Day04.fs" />
+    <Compile Include="Main.fs" />                                                
   </ItemGroup>
-
 </Project>
