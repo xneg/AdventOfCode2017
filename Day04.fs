@@ -4,8 +4,8 @@ module Day04
 // http://adventofcode.com/2017/day/4
 
 open System.IO
-let problemFileName = @"F:\Workshop\Visual Studio\FSharp\VSCode\AdventOfCode2017\Data\04.txt"
-let testFileName = @"F:\Workshop\Visual Studio\FSharp\VSCode\AdventOfCode2017\Data\04_test.txt"
+let problemFileName = @"Data\04.txt"
+let testFileName = @"Data\04_test.txt"
 
 // Same as in Day02
 let processFile (filePath : string) =
