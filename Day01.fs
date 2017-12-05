@@ -26,5 +26,5 @@ let checkCaptcha s offset =
     |> List.sum
 
 //result
-checkCaptcha str 1;;
-checkCaptcha str (str.Length/2);;
+let result1 = checkCaptcha str 1;;
+let result2 = checkCaptcha str (str.Length/2);;

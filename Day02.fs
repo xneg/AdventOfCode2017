@@ -3,18 +3,10 @@ module Day02
 // problem page
 // http://adventofcode.com/2017/day/2
 
-open System.IO
+open Utilities
+
 let testFileName = @"Data\02_test.txt"
 let problemFileName = @"Data\02.txt"
-
-let processFile (filePath : string) =
-    seq {
-        use fileReader = new StreamReader(filePath)
-
-        while not fileReader.EndOfStream do
-            let line = fileReader.ReadLine()
-            yield line.Split([|'\t';' '|])
-    }
 
 let lineCheckSumGeneral f l =
     let intLine = Array.map (fun (x : string) -> (int)x) l
@@ -23,10 +15,7 @@ let lineCheckSumGeneral f l =
 let fstAlg line = Array.max line - Array.min line
 
 let checkSum fileName (alg : int[] -> int) =
-    Seq.sumBy (lineCheckSumGeneral alg) (processFile fileName) 
-
-checkSum testFileName fstAlg;;
-checkSum problemFileName fstAlg;;
+    Seq.sumBy (lineCheckSumGeneral alg) (Helper.processFile fileName) 
 
 // let evenlyDivisible x y = if (y % x = 0) then Some(y/x) else None
 
@@ -48,5 +37,8 @@ let arrayCheckSum2 a =
 
 let sndAlg line = arrayCheckSum2 line
 
-checkSum testFileName sndAlg;;
-checkSum problemFileName sndAlg;;
+let testResult1 = checkSum testFileName fstAlg;;
+let result1 = checkSum problemFileName fstAlg;;
+
+let testResult2 = checkSum testFileName sndAlg;;
+let result2 = checkSum problemFileName sndAlg;;

@@ -1,3 +1,5 @@
+namespace Utilities
+
 module Helper =
     open System.IO
 

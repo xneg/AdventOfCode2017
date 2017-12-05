@@ -3,19 +3,10 @@ module Day04
 // problem page
 // http://adventofcode.com/2017/day/4
 
-open System.IO
+open Utilities
+
 let problemFileName = @"Data\04.txt"
 let testFileName = @"Data\04_test.txt"
-
-// Same as in Day02
-let processFile (filePath : string) =
-        seq {
-            use fileReader = new StreamReader(filePath)
-
-            while not fileReader.EndOfStream do
-                let line = fileReader.ReadLine()
-                yield line.Split([|'\t';' '|])
-        };;
 
 // Generic function using f as hash func
 let countWords f (s: string[]) =
@@ -27,15 +18,11 @@ let countWords f (s: string[]) =
 
 // Result using f as hash func
 let result f fileName =
-    let lines = fileName |> processFile 
+    let lines = fileName |> Helper.processFile 
     Seq.length lines -
     (lines
     |> Seq.map (countWords f)
     |> Seq.sumBy (Map.fold (fun state _ value -> if value > 1 then 1 else state) 0))
-
-let testResult1 = result (id) testFileName;;
-let result1 = result (id) problemFileName;;
-
 
 //2nd part. Using prime numbers mapping to find anagram hash
 let isPrime n =
@@ -62,4 +49,7 @@ let complicatedHash (s : string) =
 
     [for c in s -> c] |> List.fold (fun acc x -> acc * mapToPrimes x) 1
 
+// result
+let testResult1 = result (id) testFileName;;
+let result1 = result (id) problemFileName;;
 let result2 = result complicatedHash problemFileName;;
