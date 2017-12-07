@@ -5,32 +5,36 @@ module Day07
 
 open Utilities
 open System.Text.RegularExpressions
+open System.Collections.Generic
 
 let problemFileName = @"Data\07.txt"
 
-let x = problemFileName |> Helper.processFile 
+let lines = problemFileName |> Helper.processFile 
 
-type Leaf = string * int 
+type Program = string * int 
 
-// type Tree = 
-//     | Branch of Entity * Tree list
-//     | Leaf of Entity
+type Tree = 
+    | Branch of Program * Tree list
+    | Leaf of Program
 
-let func (x: string[]) = Leaf("dfdf", 1)
-let x : Leaf = ("sdfs", 1)
+let func (x: string[]) : Program = ("dfdf", 1)
 
-let leafs = x |> Seq.map (fun x -> x.[3..x.Length - 1])
+let leafs = lines |> Seq.map (fun x -> x.[3..x.Length - 1])
 
 let diskSpace (s : string) =
     (int)s.[1..s.Length - 2]
 
-let myFunc (x : string[]) = Program(x.[0], (int)x.[1])
+let toProgram (x : string[]) : Program = (x.[0], diskSpace x.[1])
 
-// let nodes = x |> Seq.map (fun _ -> Program)
+let programs = new Dictionary<string, Program>
 
-leafs
+Seq.iter (fun (x : string[]) -> printf "%s" x.[0]) [[|"fjkfpm"; "(69)"; "->"; "kohxzh,"; "liwvq,"; "eqkio,"; "xvoyybs"|];
+     [|"dsiixv"; "(52)"|]; [|"fhimhm"; "(66)"|]; [|"mdlubuq"; "(73)"|]]
 
-nodes
+// let nodes2 = lines |> Seq.map (fun x -> Program(x.[0], 1)) //как так??
+// leafs
+
+// nodes
 
 // let (|RegexMatchLeaf|_|) (input : string) =
 //     let result = Regex.Match(input, @"(.*?) \((.*?)\)")
