@@ -26,8 +26,6 @@ type Tree =
     | Branch of Program * Tree list
     | Leaf of Program
 
-let leafs = lines |> Seq.map (fun x -> x.[3..x.Length - 1])
-
 let toProgram (x : string[]) = {Name = x.[0]; Weight = (int)x.[1] } 
 
 let programs = new Dictionary<string, Program * string[]>()
