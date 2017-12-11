@@ -2,7 +2,6 @@ module Day09
 
 // problem page
 // http://adventofcode.com/2017/day/9
-
 let problemFileName = @"Data\09.txt"
 
 let processFile (filePath : string) =
@@ -21,50 +20,49 @@ let explode (s:string) =
 
 let (|CurrentLetter|) list = List.head list
 
-let rec myFunc list (ignore : bool) =
-    let tail = List.tail list
-    match list with
-    | [_] -> printfn "finish"
-    | CurrentLetter '{' -> 
-        printf "{" 
-        myFunc tail ignore
-    | CurrentLetter '}' -> 
-        printf "}" 
-        myFunc tail ignore
-    | CurrentLetter '<' -> 
-        printf "<"
-        myFunc tail ignore
-    | CurrentLetter '>' -> 
-        printf ">"
-        myFunc tail ignore
-    | CurrentLetter '!' -> 
-        printf "!"
-        myFunc tail (not ignore)        
-    | _ -> myFunc tail ignore
+let rec calcBlocks score blocks str =
+    let tail = List.tail str
+    match str with
+    | [_] -> score :: blocks
+    | CurrentLetter '{' -> calcBlocks (score + 1) blocks tail
+    | CurrentLetter '}' -> calcBlocks (score - 1) (score :: blocks) tail
+    | _ -> calcBlocks score blocks tail
 
-let testInput = "{<a>,<a>,<a>,<a>}"
+let rec calcBlocksWithGarbage score blocks isGarbage str  =
+    let tail = List.tail str
+    match str with
+    | [_] -> score :: blocks
+    | CurrentLetter '{' -> if not isGarbage 
+                            then calcBlocksWithGarbage (score + 1) blocks isGarbage tail 
+                            else calcBlocksWithGarbage score blocks isGarbage tail
+    | CurrentLetter '}' -> if not isGarbage 
+                            then calcBlocksWithGarbage (score - 1) (score :: blocks) isGarbage tail 
+                            else calcBlocksWithGarbage score blocks isGarbage tail
+    | CurrentLetter '<' -> calcBlocksWithGarbage score blocks true tail
+    | CurrentLetter '>' -> calcBlocksWithGarbage score blocks false tail
+    | CurrentLetter '!' -> if isGarbage 
+                            then calcBlocksWithGarbage score blocks isGarbage (List.tail tail)
+                            else calcBlocksWithGarbage score blocks isGarbage tail
+    | _ -> calcBlocksWithGarbage score blocks isGarbage tail
 
-testInput |> explode |> myFunc
+let testInput = "{{<!>},{<!>},{<!>},{<a>}}"
 
-let x: (char list) = ['a']
+testInput |> explode |> calcBlocksWithGarbage 0 [] false |> List.sum
 
-List.tail x
+line |> explode |> calcBlocksWithGarbage 0 [] false |> List.sum
 
-// let (|ToBool|_|) x =
-// let success, result = Boolean.TryParse(x)
-// if success then Some(result)
-// else None
-// let (|ToInt|_|) x =
-// let success, result = Int32.TryParse(x)
-// if success then Some(result)
-// else None
-// let (|ToFloat|_|) x =
-// let success, result = Double.TryParse(x)
-// if success then Some(result)
-// else None
-// let describeString str =
-// match str with
-// | ToBool b -> printfn “%s is a bool with value %b” str b
-// | ToInt i -> printfn “%s is an integer with value %d” str i
-// | ToFloat f -> printfn “%s is a float with value %f” str f
-// | _ -> printfn “%s is not a bool, int, or float” str
+//2nd part
+let rec calcGarbage symbols isGarbage str  =
+    let tail = List.tail str
+    match str with
+    | [_] -> symbols
+    | CurrentLetter '<' -> if isGarbage then calcGarbage (symbols + 1) true tail else calcGarbage symbols true tail
+    | CurrentLetter '>' -> calcGarbage symbols false tail
+    | CurrentLetter '!' -> if isGarbage 
+                            then calcGarbage symbols isGarbage (List.tail tail)
+                            else calcGarbage symbols isGarbage tail
+    | _ -> if isGarbage then calcGarbage (symbols + 1) true tail else calcGarbage symbols false tail
+
+line |> explode |> calcGarbage 0 false
+
+
