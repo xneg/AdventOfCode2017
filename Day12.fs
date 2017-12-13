@@ -1,5 +1,3 @@
-module Day12
-
 // problem page
 // http://adventofcode.com/2017/day/12
 
@@ -25,45 +23,38 @@ let lines file =
                         |> Array.map (fun x -> (int)x))
     |> Seq.toList
 
-let append list array =
-    Array.toList array @ list
-
 let data = new Dictionary<int, int[]>()
 
 let fillData = List.iter (fun (x : int[]) -> data.Add(x.[0], x.[1..]))
 
-lines problemFileName |> fillData
+lines problemFileName |> fillData                
 
-let ipsDic = new Dictionary<int, int>()
+let createGroups =
+    let rec sendMessage mark ips acc initial  =
+        let fsts = List.map (fst)
+        match ips with
+        | [] -> acc, initial
+        | _ -> 
+            let receivers = ips 
+                            |> List.collect (fun x -> data.[x] |> Array.toList) 
+                            |> List.filter (fun x -> not <| List.contains x (fsts acc))
+            let reduced = initial |> List.except receivers                    
+            let newAcc = receivers |> List.fold (fun s x -> (x, mark)::s) acc      
+            sendMessage mark receivers newAcc reduced
 
-data.Keys |> Seq.iter (fun x -> ipsDic.Add(x, 0))
+    let rec calcGroupsRec ip mark acc initial =
+        let findEmptyKey acc =
+            let fsts = List.map (fst)
+            initial |> List.tryFind (fun x -> not <| List.contains x (fsts acc))
+        match ip with
+        | Some(a) -> let newAcc, reduced = sendMessage mark [a] ((a, mark)::acc) initial
+                     calcGroupsRec (findEmptyKey newAcc) (mark + 1) newAcc reduced
+        | None -> acc 
 
+    data.Keys |> Seq.toList |> calcGroupsRec (Some 0) 1 []    
 
-let rec sendMessage mark ips  =
-    match ips with
-    | [] -> ()
-    | _ -> 
-        let receivers = ips |> List.collect (fun x -> data.[x] |> Array.toList) |> List.filter (fun x -> ipsDic.[x] = 0)
-        receivers |> List.iter (fun x -> ipsDic.[x] <- mark)        
-        sendMessage mark receivers 
+let groups = createGroups
 
-sendMessage 1 [0]            
-        
-let x = ipsDic.Values |> Seq.filter (fun x -> x = 1) |> Seq.sum
+let zeroGroupMembers = groups |> List.filter (fun x -> snd x = 1) |> List.length
+let groupsCount = groups |> List.maxBy snd |> snd
 
-data.Keys |> Seq.iter (fun x -> ipsDic.[x] <- 0)
-
-
-let findEmptyKey () = ipsDic.Keys |> Seq.tryFind (fun x -> ipsDic.[x] = 0)
-
-let rec calcGroups ip mark =
-    match ip with
-    | Some(a) -> sendMessage mark [a]
-                 calcGroups (findEmptyKey ()) (mark + 1)
-    | None -> ()        
-
-calcGroups (Some 0) 1     
-
-ipsDic.Values |> Seq.distinct |> Seq.length
-
-ipsDic.Values |> Seq.max
