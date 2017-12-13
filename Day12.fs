@@ -1,9 +1,10 @@
+module Day12
+
 // problem page
 // http://adventofcode.com/2017/day/12
 
 open System.IO
 open System.Text.RegularExpressions
-open System.Collections.Generic
 let problemFileName = @"Data\12.txt"
 
 let processFile (filePath : string) =
@@ -23,11 +24,7 @@ let lines file =
                         |> Array.map (fun x -> (int)x))
     |> Seq.toList
 
-let data = new Dictionary<int, int[]>()
-
-let fillData = List.iter (fun (x : int[]) -> data.Add(x.[0], x.[1..]))
-
-lines problemFileName |> fillData                
+let data = lines problemFileName |> List.map (fun x -> x.[1..]) |> List.toArray         
 
 let createGroups =
     let rec sendMessage mark ips acc initial  =
@@ -51,7 +48,7 @@ let createGroups =
                      calcGroupsRec (findEmptyKey newAcc) (mark + 1) newAcc reduced
         | None -> acc 
 
-    data.Keys |> Seq.toList |> calcGroupsRec (Some 0) 1 []    
+    [0..data.Length - 1] |> calcGroupsRec (Some 0) 1 []    
 
 let groups = createGroups
 

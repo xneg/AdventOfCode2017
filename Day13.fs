@@ -38,11 +38,11 @@ let testSeverety = testList |> getSeverety 0
 
 let tripSeverety = input |> getSeverety 0
 
-let findMinimalDelay input =
+let findMinimalDelay =
     let rec findDelay delay input =
         if getSeverety delay input = 0 
         then delay 
         else findDelay (delay + 1) input
-    findDelay 0 input    
+    findDelay 0  
 
 let minimalDelay = input |> findMinimalDelay
