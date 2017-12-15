@@ -34,17 +34,16 @@ let explode (s:string) =
 
 let input = "83,0,193,1,254,237,187,40,88,27,2,255,149,29,42,100" //"AoC 2017"
 
-let roundSequence = (explode input |> List.map (fun c -> (int)c)) @ [17; 31; 73; 47; 23]  
-
-let totalSequence = [1..64] |> List.fold (fun s _ -> s @ roundSequence) []
-
-let sparseHash = totalSequence |> getHash 0 0 [|0..255|]
-
 let testArray = [|65 ; 27 ; 9 ; 1 ; 4 ; 3 ; 40 ; 50 ; 91 ; 7 ; 6 ; 0 ; 2 ; 5 ; 68 ; 22|]
-let calcXOR (list : int[]) = Array.fold (( ^^^ )) list.[0] list.[1..]
 
-let denseHash = [for i in [0..15] do yield (calcXOR sparseHash.[i * 16.. i * 16 + 15])]
+let knotHash line =
+        let calcXOR (list : int[]) = Array.fold (( ^^^ )) list.[0] list.[1..]
+        let roundSequence = List.append (line |> explode |> List.map (fun c -> (int)c)) [17; 31; 73; 47; 23]
+        let sparseHash = [1..64] |> List.fold (fun s _ -> s @ roundSequence) [] |> getHash 0 0 [|0..255|]
+        [for i in [0..15] do yield (calcXOR sparseHash.[i * 16.. i * 16 + 15])]
+        |> List.map (fun x -> System.String.Format("{0:x2}", x)) 
+        |> String.concat System.String.Empty
 
-denseHash |> List.map (fun x -> System.String.Format("{0:x2}", x)) |> String.concat System.String.Empty
-
+// knotHash input
+                
 // d9a7de4a809c56bf3a9465cb84392c8e
