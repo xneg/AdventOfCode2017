@@ -1,4 +1,4 @@
-module Duet
+// module Duet
 
 // problem page
 // http://adventofcode.com/2017/day/18
@@ -17,58 +17,131 @@ let processFile (filePath : string) =
             yield line.Split([|' '|])
     };;
 
-let registers = new Dictionary<string, bigint>()
+type Singer (instructions : string[][], funcWrite, funcGet) =
+    
+    let registers = new Dictionary<string, bigint>()
+    let mutable currIns = 0;
+    let mutable locked = false;
 
-let mutable lastSoundPlayed = 0I;
-let mutable currIns = 0;
+    let getValue x = if registers.ContainsKey x then registers.[x] else 0I
+    let snd = funcWrite 
+    let set x value = if registers.ContainsKey x then registers.[x] <- value else registers.Add (x, value)
+    let add x value = set x (getValue x + value)
+    let mul x value = set x (getValue x * value)
+    let _mod x value = set x (getValue x % value)
+    // let rcv x = 
+    //             if getValue x <> 0I 
+    //             then 
+    //                 let v : bigint option = funcGet() 
+    //                 if v.IsSome then 
+    //                     printfn "%A" v.Value
+    //                     v.Value 
+    //                 else 
+    //                     locked <- true 
+    //                     currIns <- currIns - 1
+    //                     0I
+    //             else 0I
+    let rcv x = 
+        let v : bigint option = funcGet() 
+        if v.IsSome then
+            // printfn "%A" v.Value
+            set x v.Value
+        else
+            // printfn "locked"  
+            locked <- true 
+            currIns <- currIns - 1          
+    let jgz x value = currIns <- currIns + if getValue x > 0I then value - 1 else 0
 
-let getValue x = if registers.ContainsKey x then registers.[x] else 0I
+    let doInstruction instruction = 
+        let getSndValue str =
+            match System.Int32.TryParse str with
+            | true, num -> System.Numerics.BigInteger num
+            | _ -> getValue str
 
-let snd x = lastSoundPlayed <- getValue x
+        match instruction with 
+        | [|a;x|] when a = "snd" -> getSndValue x |> snd
+        | [|a;x|] when a = "rcv" -> rcv x 
+        | [|a;x;c|] ->  let value = getSndValue c
+                        if a = "set" then set x value
+                        elif a = "add" then add x value
+                        elif a = "mul" then mul x value
+                        elif a = "mod" then _mod x value
+                        elif a = "jgz" then jgz x ((int)value)
 
-let set x value = if registers.ContainsKey x then registers.[x] <- value else registers.Add (x, value)
+    let rec playSounds () =
+        if currIns < instructions.Length then
+            doInstruction instructions.[currIns]
+            currIns <- currIns + 1 
+            playSounds ()
+        else
+            ()        
+    
+    member this.PlaySouds () =
+        currIns <- 0
+        registers.Clear () |> ignore  
+        playSounds ()  
 
-let add x value = set x (getValue x + value)
+    member this.PlaySound() =
+        locked <- false
+        if currIns < instructions.Length then
+            doInstruction instructions.[currIns]
+            currIns <- currIns + 1
+        else
+            locked <- true            
 
-let mul x value = set x (getValue x * value)
-
-let _mod x value = set x (getValue x % value)
-
-let rcv x = if getValue x <> 0I then lastSoundPlayed else 0I
-let jgz x value = currIns <- currIns + if getValue x > 0I then value - 1 else 0
+    member this.Registers = registers 
+    member this.Locked = locked   
+    member this.CurrentIns = currIns                        
 
 let instructions = problemFileName
                 |> processFile
                 |> Seq.toArray
 
-let doInstruction instruction = 
-    let getSndValue str =
-        match System.Int32.TryParse str with
-        | true, num -> System.Numerics.BigInteger num
-        | _ -> getValue str
+let get queue = 
+    match List.rev queue with
+    | [] -> None, List.empty
+    | [r] -> 
+            Some(r), List.empty
+    | h::t -> 
+            Some(h), List.rev t        
 
-    match instruction with 
-    | [|a;x|] when a = "snd" -> snd x 
-                                //printfn "snd %s" lastSoundPlayed.ToString()
-    | [|a;x|] when a = "rcv" -> let recover = rcv x 
-                                recover.ToString() |> printfn "rcv %s" 
-                                if recover <> 0I then currIns <- 10000       
-    | [|a;x;c|] ->  let value = getSndValue c
-                    if a = "set" then set x value
-                    elif a = "add" then add x value
-                    elif a = "mul" then mul x value
-                    elif a = "mod" then _mod x value
-                    elif a = "jgz" then jgz x ((int)value)
+let mutable queue0 = List.empty
 
-currIns <- 0
-registers.Clear () |> ignore
+let mutable queue1 = List.empty
 
-let rec playSounds () =
-    if currIns < instructions.Length then
-        doInstruction instructions.[currIns]
-        currIns <- currIns + 1 
-        playSounds ()
+let mutable result = 0
+
+let write0 value = 
+    queue0 <- (value::queue0) 
+    result <- result + 1
+
+let write1 value = queue1 <- (value::queue1)
+
+let get0 () =
+    let r, q = get queue0
+    queue0 <- q
+    r
+
+let get1 () =
+    let r, q = get queue1
+    queue1 <- q
+    r
+
+let fstSinger = Singer(instructions, write1, get0)
+fstSinger.Registers.Add("p", 0I)
+
+let sndSinger = Singer(instructions, write0, get1)
+sndSinger.Registers.Add("p", 1I)
+
+let rec duet () =
+    if fstSinger.Locked && sndSinger.Locked then
+        ()
     else
-        () 
+        // printfn "doing"
+        fstSinger.PlaySound()
+        sndSinger.PlaySound()
+        duet ()
 
-playSounds ();;  
+// duet ()   
+
+// result
