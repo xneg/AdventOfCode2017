@@ -17,12 +17,12 @@ let processFile (filePath : string) =
             yield line.Split([|' '|])
     };;
 
-let registers = new Dictionary<string, int>()
+let registers = new Dictionary<string, bigint>()
 
-let mutable lastSoundPlayed = 0;
+let mutable lastSoundPlayed = 0I;
 let mutable currIns = 0;
 
-let getValue x = if registers.ContainsKey x then registers.[x] else 0
+let getValue x = if registers.ContainsKey x then registers.[x] else 0I
 
 let snd x = lastSoundPlayed <- getValue x
 
@@ -34,9 +34,8 @@ let mul x value = set x (getValue x * value)
 
 let _mod x value = set x (getValue x % value)
 
-let rcv x = if getValue x <> 0 then lastSoundPlayed else 0
-
-let jgz x value = currIns <- currIns + if getValue x > 0 then value - 1 else 0
+let rcv x = if getValue x <> 0I then lastSoundPlayed else 0I
+let jgz x value = currIns <- currIns + if getValue x > 0I then value - 1 else 0
 
 let instructions = problemFileName
                 |> processFile
@@ -45,23 +44,24 @@ let instructions = problemFileName
 let doInstruction instruction = 
     let getSndValue str =
         match System.Int32.TryParse str with
-        | true, num -> num
+        | true, num -> System.Numerics.BigInteger num
         | _ -> getValue str
 
     match instruction with 
     | [|a;x|] when a = "snd" -> snd x 
+                                //printfn "snd %s" lastSoundPlayed.ToString()
     | [|a;x|] when a = "rcv" -> let recover = rcv x 
-                                recover |> printfn "rcv %d" 
-                                if recover <> 0 then currIns <- 10000       
+                                recover.ToString() |> printfn "rcv %s" 
+                                if recover <> 0I then currIns <- 10000       
     | [|a;x;c|] ->  let value = getSndValue c
                     if a = "set" then set x value
                     elif a = "add" then add x value
                     elif a = "mul" then mul x value
                     elif a = "mod" then _mod x value
-                    elif a = "jgz" then jgz x value
+                    elif a = "jgz" then jgz x ((int)value)
 
 currIns <- 0
-registers.Clear |> ignore
+registers.Clear () |> ignore
 
 let rec playSounds () =
     if currIns < instructions.Length then
