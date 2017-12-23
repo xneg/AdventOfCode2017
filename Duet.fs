@@ -29,18 +29,7 @@ type Singer (instructions : string[][], funcWrite, funcGet) =
     let add x value = set x (getValue x + value)
     let mul x value = set x (getValue x * value)
     let _mod x value = set x (getValue x % value)
-    // let rcv x = 
-    //             if getValue x <> 0I 
-    //             then 
-    //                 let v : bigint option = funcGet() 
-    //                 if v.IsSome then 
-    //                     printfn "%A" v.Value
-    //                     v.Value 
-    //                 else 
-    //                     locked <- true 
-    //                     currIns <- currIns - 1
-    //                     0I
-    //             else 0I
+    
     let rcv x = 
         let v : bigint option = funcGet() 
         if v.IsSome then
@@ -50,23 +39,23 @@ type Singer (instructions : string[][], funcWrite, funcGet) =
             // printfn "locked"  
             locked <- true 
             currIns <- currIns - 1          
-    let jgz x value = currIns <- currIns + if getValue x > 0I then value - 1 else 0
+    let jgz x value = currIns <- currIns + if x > 0I then value - 1 else 0
 
     let doInstruction instruction = 
-        let getSndValue str =
+        let getIntValue str =
             match System.Int32.TryParse str with
             | true, num -> System.Numerics.BigInteger num
             | _ -> getValue str
 
         match instruction with 
-        | [|a;x|] when a = "snd" -> getSndValue x |> snd
+        | [|a;x|] when a = "snd" -> getIntValue x |> snd
         | [|a;x|] when a = "rcv" -> rcv x 
-        | [|a;x;c|] ->  let value = getSndValue c
+        | [|a;x;c|] ->  let value = getIntValue c
                         if a = "set" then set x value
                         elif a = "add" then add x value
                         elif a = "mul" then mul x value
                         elif a = "mod" then _mod x value
-                        elif a = "jgz" then jgz x ((int)value)
+                        elif a = "jgz" then jgz (getIntValue x) ((int)value)
 
     let rec playSounds () =
         if currIns < instructions.Length then
@@ -134,14 +123,11 @@ let sndSinger = Singer(instructions, write0, get1)
 sndSinger.Registers.Add("p", 1I)
 
 let rec duet () =
-    if fstSinger.Locked && sndSinger.Locked then
-        ()
-    else
-        // printfn "doing"
+    if not fstSinger.Locked || not sndSinger.Locked then
         fstSinger.PlaySound()
         sndSinger.PlaySound()
         duet ()
 
-// duet ()   
+duet ()   
 
-// result
+result
