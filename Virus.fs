@@ -4,7 +4,6 @@
 // http://adventofcode.com/2017/day/22
 
 open System.IO
-open System.Web
 
 let processFile (filePath : string) =
         seq {
@@ -50,7 +49,7 @@ let turn currentDirection direction =
     let nextPosition = if nextPosition < 0 then 4 + nextPosition else nextPosition
     List.item (nextPosition % 4) directions
 
-let globalMatrix : int [,] = Array2D.init 501 501 (fun _ _ -> 0)
+let globalMatrix : Status [,] = Array2D.init 10001 10001 (fun _ _ -> Clean)
 
 let geometryToArray position =
     let offset = Array2D.length1 globalMatrix / 2
@@ -74,31 +73,29 @@ let offset = initial.Length / 2
 
 for i in 0..initial.Length - 1 do
     for j in 0..initial.Length - 1 do
-        let value = initial.[i].[j] = '.'
-        let value = if initial.[i].[j] = '.' then 0 else 1
+        let value = if initial.[i].[j] = '.' then Clean else Infected
         setValueToArray (j - offset, -i + offset) value
 
 // globalMatrix  
  
 let rec virusGo position direction n limit infections =
     if n < limit then
-        match geometryToArray position with
-        | 0 -> 
-                    let newDirection = turn direction Left
-                    setValueToArray position 1
-                    let newPosition = move position newDirection      
-                    virusGo newPosition newDirection (n + 1) limit (infections + 1)
-        | 1 -> 
-                    let newDirection = turn direction Right
-                    setValueToArray position 0
-                    let newPosition = move position newDirection    
-                    virusGo newPosition newDirection (n + 1) limit infections
+        let currentStatus = geometryToArray position
+        let turnDirection, infected = match geometryToArray position with
+                                        | Clean -> Left, 0
+                                        | Weakend -> Up, 1
+                                        | Infected -> Right, 0
+                                        | Flagged -> Down, 0
+
+        nextStatus currentStatus |> setValueToArray position 
+        let newDirection = turn direction turnDirection
+        let newPosition = move position newDirection      
+        virusGo newPosition newDirection (n + 1) limit (infections + infected)                                    
     else
-        setValueToArray position (geometryToArray position + 2)  
         infections
 
 let iniPosition = (0, 0)      
 
-let infections = virusGo iniPosition Up 0 10000 0    
+let infections = virusGo iniPosition Up 0 10000000 0    
 
 // globalMatrix  
