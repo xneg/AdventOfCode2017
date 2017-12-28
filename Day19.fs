@@ -36,10 +36,9 @@ let field = problemFileName
                 |> Seq.map (explode >> List.toArray) 
                 |> Seq.toArray  
 
-let rec moveThroughTubes (field : char[][]) direction letters position =
+let rec moveThroughTubes (field : char[][]) direction letters steps position =
     let getCurSymbol position = 
         let x, y = fst position, snd position
-        // printfn "%d %d" x y
         if (x < 0 || x >= field.[0].Length || y < 0 || y >= field.Length) then ' '
         else field.[y].[x]
 
@@ -48,23 +47,20 @@ let rec moveThroughTubes (field : char[][]) direction letters position =
         | Up | Down -> if move position Left |> getCurSymbol <> ' ' then Left else Right
         | Left | Right -> if move position Up |> getCurSymbol <> ' ' then Up else Down
 
-    let curSymbol = getCurSymbol position
-    // printfn "%c" curSymbol
     match getCurSymbol position with
-    | ' ' -> letters //exit
-    | '|'| '-' -> move position direction |> moveThroughTubes field direction letters
+    | ' ' -> letters, steps //exit
+    | '|'| '-' -> move position direction |> moveThroughTubes field direction letters (steps + 1)
     | '+' -> let direction = findNewDirection
-             //printfn "%s" (direction.ToString())
-             let newPos = move position Right
-             let curSymbol = getCurSymbol newPos
-             //printfn "%d %d" (fst newPos) (snd newPos)
-             //printfn "newPos symbol = %c" curSymbol
-             move position direction |> moveThroughTubes field direction letters
-    | letter -> move position direction |> moveThroughTubes field direction (letter::letters)
+             move position direction |> moveThroughTubes field direction letters (steps + 1)
+    | letter -> move position direction |> moveThroughTubes field direction (letter::letters) (steps + 1)
 
 let enter = 0, field.[0] |> Array.findIndex (fun x -> x = '|')      
 
-let result = moveThroughTubes field Down [] (snd enter, fst enter) 
+let result = moveThroughTubes field Down [] 0 (snd enter, fst enter) 
+
+let letters = fst result
             |> List.rev
             |> Array.ofList |> System.String
+
+let steps = snd result        
 
