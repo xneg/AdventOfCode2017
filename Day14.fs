@@ -37,18 +37,22 @@ let getNeighbours i j (map : char[][]) =
         List.concat [vert; hor]       
                  
 
-// let map = [[|0;2;3|];[|4;5;6|];[|7;8;9|]] |> List.toArray
+// let map = [|[|'1';'1';'0'|];[|'1';'1';'0'|];[|'0';'0';'1'|]|] 
 
-let graph = map |> Array.mapi (
-            fun i x -> x 
-                    |> Array.mapi (
-                        fun j x ->  
-                                    if (x = '0') 
-                                    then [||] 
-                                    else getNeighbours i j map |> List.filter (fun x -> fst x <> '0') |> List.map snd |> List.toArray))            
-                |> Array.fold (fun acc x -> Array.concat [acc; x]) [||]      
 
-let data = graph
+let graph map =
+    map 
+    |> Array.mapi (fun i x -> x 
+                            |> Array.mapi (fun j x -> 
+                                if (x = '0') then [||] 
+                                else
+                                let neighbours = getNeighbours i j map |> List.filter (fun x -> fst x <> '0') |> List.map snd 
+                                (i * map.Length + j)::neighbours |> List.toArray)) 
+    |> Array.fold (fun acc x -> Array.concat [acc; x]) [||] 
+
+// graph map
+
+let data = graph map
 
 let createGroups =
     let rec sendMessage mark ips acc initial  =
@@ -67,6 +71,7 @@ let createGroups =
                     sendMessage mark receivers newAcc reduced
 
     let rec calcGroupsRec ip mark acc initial =
+        printfn "%d" mark
         let findEmptyKey acc =
             let fsts = List.map (fst)
             initial |> List.tryFind (fun x -> not <| List.contains x (fsts acc))
@@ -75,10 +80,24 @@ let createGroups =
                      calcGroupsRec (findEmptyKey newAcc) (mark + 1) newAcc reduced
         | None -> acc 
 
-    [0..data.Length - 1] |> calcGroupsRec (Some 0) 1 []  
+    let ini = Array.foldBack (fun x s -> x::s) data [] 
+                |> List.mapi (fun i x -> if x |> Array.length > 1 then i else -1) |> List.filter (fun x -> x >= 0)
 
-            
+    ini |> calcGroupsRec (Some 0) 1 [] 
 
+let groups = createGroups 
+
+let ini = Array.foldBack (fun x s -> x::s) data [] 
+                |> List.mapi (fun i x -> if x |> Array.length > 1 then i else -1) |> List.filter (fun x -> x >= 0)
+
+ini.Length
+data        
+
+groups |> List.maxBy snd
+let single = Array.foldBack (fun x s -> x::s) data [] 
+                |> List.mapi (fun i x -> if x |> Array.length = 1 then i else -1) |> List.filter (fun x -> x >= 0)  |> List.length
+
+495 + 608
 
 
 
